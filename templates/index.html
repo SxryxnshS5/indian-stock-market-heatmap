@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Stock Heatmap</title>
+    <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-core.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-treemap.min.js"></script>
+    <style type="text/css">
+      html, body, #container {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script>
+      {% raw %}
+      anychart.onDocumentReady(function () {
+        
+        // Fetch stock data from the Flask backend
+        fetch('/data')
+          .then(response => response.json())
+          .then(stockData => {
+            // Format the data for AnyChart
+            const dataSet = [{
+              name: "Stocks",
+              children: stockData.map(stock => ({
+                name: `${stock.name}\n₹${stock.price}\n(${stock.change}%)`,
+                value: stock.value,
+                change: stock.change
+              }))
+            }];
+
+            // Create the treemap chart and set the data
+            var chart = anychart.treeMap(dataSet, "as-tree");
+
+            // Set chart title
+            chart.title("Stock Market Heatmap");
+
+            // Customize tooltip to display percentage change
+            chart.tooltip().format("Symbol: {%name}\nChange: {%change}%\nPrice: ₹{%price}");
+
+            // Set the container id for the chart
+            chart.container("container");
+
+            // Initiate drawing the chart
+            chart.draw();
+          });
+      });
+      {% endraw %}
+    </script>
+  </body>
+</html>
