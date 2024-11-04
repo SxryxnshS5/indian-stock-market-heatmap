@@ -3,19 +3,20 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 import time
+from playwright.sync_api import sync_playwright
 
 app = Flask(__name__)
 
 def scrape_stock_data():
-    # Initialize Selenium WebDriver
-    driver = webdriver.Chrome()  # Or webdriver.Firefox() if using Firefox
-    driver.get("https://portal.tradebrains.in/index/MIDCAP50/heatmap")
-    
-    # Wait for the page to load completely
-    time.sleep(5)
-    
-    # Get page source and parse it with BeautifulSoup
-    soup = BeautifulSoup(driver.page_source, "html.parser")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto("https://portal.tradebrains.in/index/MIDCAP50/heatmap")
+        page.wait_for_timeout(10000)  # Wait for content to load
+        html = page.content()
+        browser.close()
+
+    soup = BeautifulSoup(html, "html.parser")
     
     # Find all stock cards by their structure in the HTML
     stock_data = []
@@ -36,10 +37,7 @@ def scrape_stock_data():
         except (AttributeError, ValueError):
             # Skip cards that don't match the expected structure or have conversion issues
             continue
-    
-    # Close the browser
-    driver.quit()
-    
+    print(stock_data)
     return stock_data
 
 
