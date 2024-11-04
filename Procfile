@@ -1,1 +1,2 @@
-web: gunicorn app:app
+release: playwright install
+web: python app.py
